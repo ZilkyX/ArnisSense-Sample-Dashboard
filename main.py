@@ -22,8 +22,17 @@ class App(ctk.CTk):
         self.container.pack(fill="both", expand=True)
         self.container.grid_rowconfigure(0, weight=1)
         self.container.grid_columnconfigure(0, weight=1)
-
+        
         self.pages = {}
+
+        self.match_data = {
+        "player1_team_name": "",
+        "player2_team_name": "",
+        "player1": "",
+        "player2": "",
+        "no_of_rounds": "",
+        "type_of_match": "",
+        }
 
         for Page in (HomePage, DashboardPage, SettingsPage, LogsPage):
             page = Page(self.container, self)
