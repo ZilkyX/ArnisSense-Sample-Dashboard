@@ -18,7 +18,9 @@ class App(ctk.CTk):
         # self.configure(cursor="none")
 
         self.container = ctk.CTkFrame(self)
-        self.geometry("1280x720")
+        self.geometry("800x400")
+        self.iconbitmap("assets/logo/Arnisense_Logo.ico")
+        self.title("ArniSense")
         self.container.pack(fill="both", expand=True)
         self.container.grid_rowconfigure(0, weight=1)
         self.container.grid_columnconfigure(0, weight=1)
@@ -39,7 +41,7 @@ class App(ctk.CTk):
             self.pages[Page.__name__] = page
             page.grid(row=0, column=0, sticky="nsew")
 
-        self.show_page("HomePage")
+        self.show_page("DashboardPage")
 
     def show_page(self, name):
         self.pages[name].tkraise()

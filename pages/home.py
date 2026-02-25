@@ -104,7 +104,20 @@ class HomePage(ctk.CTkFrame):
 
         popup = ctk.CTkToplevel(self)
         popup.title("Match Setup")
-        popup.geometry("520x450")
+        popup.geometry("600x550")
+
+        # popup.overrideredirect(True)
+        # popup.update_idletasks() 
+        # screen_width = popup.winfo_screenwidth()
+        # screen_height = popup.winfo_screenheight()
+
+        # width = 520
+        # height = 450
+
+        # x = (screen_width // 2) - (width // 2)
+        # y = (screen_height // 2) - (height // 2)
+
+        # popup.geometry(f"{width}x{height}+{x}+{y}")
 
         popup.grab_set()
 

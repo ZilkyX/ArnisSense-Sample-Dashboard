@@ -1,5 +1,6 @@
 import customtkinter as ctk
 from tkinter import ttk
+from PIL import Image
 
 class DashboardPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
@@ -71,19 +72,29 @@ class DashboardPage(ctk.CTkFrame):
 
         self.tree.pack(fill="both", expand=True, padx=10, pady=10)
 
-        self.player1_card = self.create_card("Player 1", 0, "#2B2B2B", "#4A90E2")
+        self.player1_card = self.create_card("assets/body_parts/Head_Hit.png", "#FFFFFF")
         self.player1_card.grid(row=1, column=0, sticky="nsew", padx=(20, 10), pady=(0, 20))
 
-        self.player2_card = self.create_card("Player 2", 0, "#2B2B2B", "#E24A4A")
+        self.player2_card = self.create_card("assets/body_parts/LeftThigh_Hit.png", "#FFFFFF")
         self.player2_card.grid(row=1, column=1, sticky="nsew", padx=(10, 20), pady=(0, 20))
 
-    def create_card(self, title, value, bg_color, accent_color):
+    def create_card(self, file_path, bg_color):
         frame = ctk.CTkFrame(self, corner_radius=20, fg_color=bg_color)
         frame.grid_rowconfigure((0,1), weight=1)
         frame.grid_columnconfigure(0, weight=1)
-        ctk.CTkLabel(frame, text=title, font=("Arial", 20, "bold"), text_color=accent_color).grid(row=0, column=0, sticky="nsew", pady=(15,0))
-        frame.score_label = ctk.CTkLabel(frame, text=str(value), font=("Arial", 48, "bold"), text_color="#FFFFFF")
-        frame.score_label.grid(row=1, column=0, sticky="nsew", pady=(10,15))
+
+        self.bp_img = ctk.CTkImage(
+        Image.open(file_path),
+        size=(120, 100)
+        )
+        ctk.CTkLabel(
+        frame,
+        image= self.bp_img ,
+        text=""
+        ).grid(row=0, column=0, sticky="nsew", pady=(15,0))
+
+        self.logo_img = self.bp_img    
+
         return frame
 
     def refresh_match_data(self):
@@ -132,3 +143,7 @@ class DashboardPage(ctk.CTkFrame):
         if self.playing:
             self.timer_seconds += 1
             self.after(1000, self.update_timer_label)
+
+    def change_hitpoint(self):
+        pass
+        # self.bp_img.configure()
