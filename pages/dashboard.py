@@ -1,149 +1,232 @@
 import customtkinter as ctk
-from tkinter import ttk
 from PIL import Image
 
+
 class DashboardPage(ctk.CTkFrame):
+
     def __init__(self, parent, controller):
         super().__init__(parent)
+
         self.controller = controller
-        self.scores = [0, 0]
+
+        self.scores = [3, 2]
         self.playing = False
         self.timer_seconds = 0
+        self.round_number = 1
 
-        self.grid_rowconfigure(0, weight=0) 
-        self.grid_rowconfigure(1, weight=1) 
+        self.card_images = {}
+        self.score_frames = [[], []]
+
+        self._build_layout()
+
+        self.update_score_display()
+
+    def _build_layout(self):
+
+        self.grid_rowconfigure(0, weight=0)
+        self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure((0, 1), weight=1)
 
-        self.details_panel = ctk.CTkFrame(self, corner_radius=20, fg_color="#1E1E2F")
-        self.details_panel.grid(row=0, column=0, columnspan=2, sticky="nsew", padx=20, pady=(20, 10))
-        self.details_panel.grid_columnconfigure(0, weight=1)
-        self.details_panel.grid_columnconfigure(1, weight=1)
-        self.details_panel.grid_columnconfigure(2, weight=1)
+        self.details_panel = ctk.CTkFrame(
+            self,
+            corner_radius=20,
+            fg_color="#1E1E2F"
+        )
 
-        self.player1_info = ctk.CTkLabel(self.details_panel, text="Player 1: --", font=("Arial", 16), text_color="#4A90E2")
-        self.player1_info.grid(row=0, column=0, sticky="w", padx=20, pady=(10, 5))
+        self.details_panel.grid(
+            row=0,
+            column=0,
+            columnspan=2,
+            sticky="nsew",
+            padx=10,
+            pady=10
+        )
 
-        self.rounds_label = ctk.CTkLabel(self.details_panel, text="Round --", font=("Arial", 24, "bold"), text_color="#FFFFFF")
-        self.rounds_label.grid(row=0, column=1, sticky="nsew")
+        for i in range(3):
+            self.details_panel.grid_columnconfigure(i, weight=1)
 
-        self.timer_label = ctk.CTkLabel(self.details_panel, text="00:00", font=("Arial", 18, "bold"), text_color="#FFD700")
-        self.timer_label.grid(row=1, column=1, sticky="n", pady=(0, 10))
+        self.player1_info = ctk.CTkLabel(
+            self.details_panel,
+            text="Player 1: --",
+            font=("Arial", 16),
+            text_color="#4A90E2"
+        )
+        self.player1_info.grid(row=0, column=0, padx=20, pady=10, sticky="w")
 
-        self.player2_info = ctk.CTkLabel(self.details_panel, text="Player 2: --", font=("Arial", 16), text_color="#E24A4A")
-        self.player2_info.grid(row=0, column=2, sticky="e", padx=20, pady=(10, 5))
+        self.rounds_label = ctk.CTkLabel(
+            self.details_panel,
+            text="Round: 1/5",
+            font=("Arial", 24, "bold")
+        )
+        self.rounds_label.grid(row=0, column=1)
 
-        button_frame = ctk.CTkFrame(self.details_panel, fg_color="transparent")
-        button_frame.grid(row=3, column=0, columnspan=3, pady=(0, 10))
-        button_frame.grid_columnconfigure((0, 1, 2), weight=1)
+        self.timer_label = ctk.CTkLabel(
+            self.details_panel,
+            text="00:00",
+            font=("Arial", 18, "bold"),
+            text_color="#FFD700"
+        )
+        self.timer_label.grid(row=1, column=1)
 
-        self.play_pause_btn = ctk.CTkButton(button_frame, text="Play", command=self.toggle_timer,
-                                            fg_color="#4A90E2", hover_color="#357ABD", font=("Arial", 16, "bold"),
-                                            corner_radius=12)
-        self.play_pause_btn.grid(row=0, column=0, padx=10, pady=5, sticky="ew")
+        self.player2_info = ctk.CTkLabel(
+            self.details_panel,
+            text="Player 2: --",
+            font=("Arial", 16),
+            text_color="#E24A4A"
+        )
+        self.player2_info.grid(row=0, column=2, padx=20, pady=10, sticky="e")
 
-        self.reset_btn = ctk.CTkButton(button_frame, text="Reset Timer", command=self.reset_timer,
-                                       fg_color="#F39C12", hover_color="#D68910", font=("Arial", 16, "bold"),
-                                       corner_radius=12)
-        self.reset_btn.grid(row=0, column=1, padx=10, pady=5, sticky="ew")
+        self._create_score_boxes(self.details_panel, 0)
+        self._create_score_boxes(self.details_panel, 1)
 
-        self.end_game_btn = ctk.CTkButton(button_frame, text="End Game", command=self.end_game,
-                                          fg_color="#E24A4A", hover_color="#B73737", font=("Arial", 16, "bold"),
-                                          corner_radius=12)
-        self.end_game_btn.grid(row=0, column=2, padx=10, pady=5, sticky="ew")
+        self.player1_card = self.create_card(
+            "assets/body_parts/Whole.png", 1, 0
+        )
 
-        table_frame = ctk.CTkFrame(self.details_panel, corner_radius=15, fg_color="transparent")
-        table_frame.grid(row=4, column=0, columnspan=3, sticky="nsew", padx=20, pady=(10, 15))
-        table_frame.grid_rowconfigure(0, weight=1)
-        table_frame.grid_columnconfigure(0, weight=1)
+        self.player2_card = self.create_card(
+            "assets/body_parts/Whole.png", 1, 1
+        )
 
-        self.num_rounds = 5 
-        columns = ["Player"] + [f"R{i+1}" for i in range(self.num_rounds)]
-        self.tree = ttk.Treeview(table_frame, columns=columns, show="headings", height=2)
-        style = ttk.Style()
-        style.theme_use("clam")
-        style.configure("Treeview", background="#2B2B2B", foreground="#FFFFFF", rowheight=40,
-                        fieldbackground="#2B2B2B", font=("Arial", 14))
-        style.configure("Treeview.Heading", font=("Arial", 14, "bold"), background="#3B3B3B", foreground="#FFFFFF")
-        style.map("Treeview", background=[('selected', '#4A90E2')], foreground=[('selected', '#FFFFFF')])
+        self.change_hitpoint(0, "RighHand_Hit")
+    def _create_score_boxes(self, parent, player_index):
 
-        for col in columns:
-            self.tree.heading(col, text=col, anchor="center")
-            self.tree.column(col, anchor="center", width=80 if col != "Player" else 120)
+        holder = ctk.CTkFrame(parent, fg_color="transparent")
 
-        self.tree.pack(fill="both", expand=True, padx=10, pady=10)
+        column_map = [0, 2]
 
-        self.player1_card = self.create_card("assets/body_parts/Head_Hit.png", "#FFFFFF")
-        self.player1_card.grid(row=1, column=0, sticky="nsew", padx=(20, 10), pady=(0, 20))
+        holder.grid(
+            row=1,
+            column=column_map[player_index],
+            pady=5,
+            sticky="n"
+        )
 
-        self.player2_card = self.create_card("assets/body_parts/LeftThigh_Hit.png", "#FFFFFF")
-        self.player2_card.grid(row=1, column=1, sticky="nsew", padx=(10, 20), pady=(0, 20))
+        parent.grid_columnconfigure(column_map[player_index], weight=1)
 
-    def create_card(self, file_path, bg_color):
-        frame = ctk.CTkFrame(self, corner_radius=20, fg_color=bg_color)
-        frame.grid_rowconfigure((0,1), weight=1)
+        boxes = []
+
+        for _ in range(5):
+
+            box = ctk.CTkLabel(
+                holder,
+                text="",
+                width=32,
+                height=32,
+                corner_radius=6,
+                fg_color="#2B2B2B"
+            )
+
+            box.pack(side="left", padx=3)
+            boxes.append(box)
+
+        self.score_frames[player_index] = boxes
+
+    def create_card(self, file_path, row, column):
+
+        frame = ctk.CTkFrame(
+            self,
+            corner_radius=20,
+            fg_color="#FFFFFF"
+        )
+
+        frame.grid_rowconfigure(0, weight=1)
         frame.grid_columnconfigure(0, weight=1)
 
-        self.bp_img = ctk.CTkImage(
-        Image.open(file_path),
-        size=(120, 100)
+        img = ctk.CTkImage(
+            Image.open(file_path),
+            Image.open(file_path),
+            size=(180, 220)
         )
-        ctk.CTkLabel(
-        frame,
-        image= self.bp_img ,
-        text=""
-        ).grid(row=0, column=0, sticky="nsew", pady=(15,0))
 
-        self.logo_img = self.bp_img    
+        label = ctk.CTkLabel(frame, image=img, text="")
+        label.image = img
+        label.grid(pady=15)
+
+        self.card_images[file_path] = img
+
+        frame.grid(
+            row=row,
+            column=column,
+            sticky="nsew",
+            padx=10,
+            pady=10
+        )
 
         return frame
 
-    def refresh_match_data(self):
-        md = self.controller.match_data
-        self.player1_info.configure(text=f"Player 1: {md.get('player1_team_name','--')}")
-        self.player2_info.configure(text=f"Player 2: {md.get('player2_team_name','--')}")
-        self.rounds_label.configure(text=f"Round 1 / {md.get('no_of_rounds', 5)}")
-        self.num_rounds = int(md.get('no_of_rounds', 5))
-
-        cols = ["Player"] + [f"R{i+1}" for i in range(self.num_rounds)]
-        self.tree.config(columns=cols)
-        for col in cols:
-            self.tree.heading(col, text=col)
-            self.tree.column(col, anchor="center", width=80 if col != "Player" else 120)
-
-        for item in self.tree.get_children():
-            self.tree.delete(item)
-
-        self.scores = [0, 0]
-        self.tree.insert("", "end", values=[md.get('player1','Player 1')]+[""]*self.num_rounds, tags=("player1",))
-        self.tree.insert("", "end", values=[md.get('player2','Player 2')]+[""]*self.num_rounds, tags=("player2",))
-        self.tree.tag_configure("player1", foreground="#4A90E2")
-        self.tree.tag_configure("player2", foreground="#E24A4A")
-
-        self.player1_card.score_label.configure(text="0")
-        self.player2_card.score_label.configure(text="0")
-
-    def toggle_timer(self):
-        self.playing = not self.playing
-        self.play_pause_btn.configure(text="Pause" if self.playing else "Play")
-        if self.playing:
-            self.update_timer_label()
-
-    def reset_timer(self):
-        self.timer_seconds = 0
-        self.update_timer_label()
-
-    def end_game(self):
-        self.playing = False
-        self.play_pause_btn.configure(text="Play")
-
     def update_timer_label(self):
+
         minutes = self.timer_seconds // 60
         seconds = self.timer_seconds % 60
-        self.timer_label.configure(text=f"{minutes:02d}:{seconds:02d}")
+
+        self.timer_label.configure(
+            text=f"{minutes:02d}:{seconds:02d}"
+        )
+
         if self.playing:
             self.timer_seconds += 1
             self.after(1000, self.update_timer_label)
 
-    def change_hitpoint(self):
-        pass
-        # self.bp_img.configure()
+    def refresh_match_data(self):
+
+        data = self.controller.match_data
+
+        self.player1_info.configure(
+            text=f"Player 1: {data.get('player1','--')} | "
+                 f"{data.get('player1_team_name','--')}"
+        )
+
+        self.player2_info.configure(
+            text=f"Player 2: {data.get('player2','--')} | "
+                 f"{data.get('player2_team_name','--')}"
+        )
+
+    def add_score(self, player_index):
+
+        if player_index not in [0, 1]:
+            return
+
+        if self.scores[player_index] >= 5:
+            return
+
+        self.scores[player_index] += 1
+        self.update_score_display()
+
+    def update_score_display(self):
+
+        for player_index in range(2):
+
+            score = self.scores[player_index]
+            boxes = self.score_frames[player_index]
+
+            for i, box in enumerate(boxes):
+
+                box.configure(
+                    fg_color="#FFD700" if i < score else "#2B2B2B"
+                )
+
+    def change_hitpoint(self, player_index, body_part="Whole"):
+
+        try:
+            path = f"assets/body_parts/{body_part}.png"
+
+            img = ctk.CTkImage(
+                Image.open(path),
+                Image.open(path),
+                size=(190, 220)
+            )
+
+            target_card = (
+                self.player1_card if player_index == 0
+                else self.player2_card
+            )
+
+            for widget in target_card.winfo_children():
+                if isinstance(widget, ctk.CTkLabel):
+                    widget.configure(image=img)
+                    widget.image = img
+
+            self.card_images[path] = img
+
+        except Exception as e:
+            print("Hit image update error:", e)

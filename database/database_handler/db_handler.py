@@ -125,7 +125,40 @@ class DatabaseHandler:
 
         self.conn.commit()
 
- 
+    def filter_matches(self, keyword=None, date=None):
+
+        cursor = self.conn.cursor()
+
+        query = """
+        SELECT *
+        FROM Matches
+        WHERE 1=1
+        """
+
+        params = []
+
+        if keyword:
+            query += """
+            AND (
+                Player1Name LIKE ?
+                OR Player2Name LIKE ?
+                OR Player1Team LIKE ?
+                OR Player2Team LIKE ?
+            )
+            """
+            like_keyword = f"%{keyword}%"
+            params.extend([like_keyword]*4)
+
+        if date:
+            query += " AND DATE(CreatedAt) = DATE(?)"
+            params.append(date)
+
+        query += " ORDER BY CreatedAt DESC"
+
+        cursor.execute(query, params)
+
+        return cursor.fetchall()
+
     def close(self):
         if self.conn:
             self.conn.close()

@@ -3,7 +3,7 @@ from PIL import Image
 import math
 from datetime import datetime
 
-PRINTER_NAME = "POS-58(copy of 6)"
+PRINTER_NAME = "Thermal Printer"
 
 
 def format_line(left, right, width=32):
@@ -61,6 +61,7 @@ def print_round_receipt(player1, player2, round_no, score1, score2):
     bold_on = ESC + b'E' + b'\x01'
     bold_off = ESC + b'E' + b'\x00'
     cut = GS + b'V' + b'\x41' + b'\x10'
+    logo_bytes = image_to_escpos(r"assets/logo/128x128.jpeg")
 
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -91,7 +92,6 @@ def print_round_receipt(player1, player2, round_no, score1, score2):
     receipt_text += "Powered by Arnisense\n\n"
 
     # Load Logo
-    logo_bytes = image_to_escpos(r"assets\logo\Arnisense_Logo.png")
 
     receipt_bytes = (
         initialize +

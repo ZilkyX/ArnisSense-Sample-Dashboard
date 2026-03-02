@@ -3,8 +3,9 @@ from pages.home import HomePage
 from pages.dashboard import DashboardPage
 from pages.settings import SettingsPage
 from pages.logs import LogsPage
+from pages.form import FormPage
+from pages.view_details import MatchDetailsPage
 
-ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("dark-blue")
 ctk.set_widget_scaling(1.0)
 ctk.set_window_scaling(1.0)
@@ -28,20 +29,19 @@ class App(ctk.CTk):
         self.pages = {}
 
         self.match_data = {
+        "match_id": "",
         "player1_team_name": "",
         "player2_team_name": "",
         "player1": "",
         "player2": "",
-        "no_of_rounds": "",
-        "type_of_match": "",
         }
 
-        for Page in (HomePage, DashboardPage, SettingsPage, LogsPage):
+        for Page in (HomePage, DashboardPage, SettingsPage, LogsPage, FormPage, MatchDetailsPage):
             page = Page(self.container, self)
             self.pages[Page.__name__] = page
             page.grid(row=0, column=0, sticky="nsew")
 
-        self.show_page("DashboardPage")
+        self.show_page("HomePage")
 
     def show_page(self, name):
         self.pages[name].tkraise()
